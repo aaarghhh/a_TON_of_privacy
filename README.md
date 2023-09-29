@@ -129,6 +129,8 @@ You can follow different guide on how to create them with a disposable number.
 The sockpuppet need to be hardened as much is possible.
 
 ### UNDER PRIVACY SETTINGS ON YOUR TELEGRAM CLIENT
+
+USe this setting in order to hardening your Telegram account.
 ```
 Phone number -> Nobody
 Last Seen / Online -> Nobody 
@@ -138,6 +140,9 @@ Forwarded Message -> Nobody
 Calls -> Nobody
 Group & Channel -> Nobody
 ```
+<p align="center">
+  <img src="https://user-images.githubusercontent.com/968839/218277133-507e7c44-fad3-44ca-8a13-d25e51c1fa5b.png" />
+</p>
 
 After the sock puppet creation, You'll need API HASH and API KEY. 
 Telegram 'API_ID' and 'API_HASH', which you can get by creating a developers account using this link: https://my.telegram.org/.  
