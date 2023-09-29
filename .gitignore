@@ -1,0 +1,10 @@
+.idea/
+venv/
+dist/
+*23*/
+*egg-info/
+
+*_ff.*
+*.session
+.env
+.env.bk
