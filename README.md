@@ -130,7 +130,7 @@ The sockpuppet need to be hardened as much is possible.
 
 ### UNDER PRIVACY SETTINGS ON YOUR TELEGRAM CLIENT
 
-USe this setting in order to hardening your Telegram account.
+Use this setting in order to hardening your Telegram account.
 ```
 Phone number -> Nobody
 Last Seen / Online -> Nobody 
@@ -140,8 +140,9 @@ Forwarded Message -> Nobody
 Calls -> Nobody
 Group & Channel -> Nobody
 ```
+
 <p align="center">
-  <img src="https://user-images.githubusercontent.com/968839/218277133-507e7c44-fad3-44ca-8a13-d25e51c1fa5b.png" />
+  <img src="https://github-production-user-asset-6210df.s3.amazonaws.com/968839/271731626-75fdfdde-a997-40c9-8cca-d32f444ad276.png" />
 </p>
 
 After the sock puppet creation, You'll need API HASH and API KEY. 
