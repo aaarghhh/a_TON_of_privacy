@@ -5,11 +5,11 @@ from setuptools import (
 
 setup(
     name="atop",
-    version="0.1.8-1",
+    version="0.1.9",
     author="Aaarghhh",
     author_email="giacomo@udontneed.it",
     packages=["atop", "atop.modules"],
-    package_dir={'':'src'},
+    package_dir={"": "src"},
     include_package_data=True,
     entry_points={"console_scripts": ["a-ton-of-privacy = atop.atop:run"]},
     url="https://github.com/aaarghhh/a_TON_of_privacy",
@@ -30,7 +30,7 @@ setup(
         "rsa>=4.9",
         "soupsieve>=2.5",
         "Telethon==1.30.3",
-        "urllib3>=2.0.5"
+        "urllib3>=2.0.5",
     ],
     zip_safe=False,
 )

@@ -10,6 +10,7 @@ from bs4 import BeautifulSoup
 
 from telethon.sessions import StringSession
 from atop.modules.const import user_agent
+from atop.modules.util import Util
 
 import requests
 import random
@@ -27,7 +28,7 @@ class TelegramHelper:
     _sessionstring = None
 
     @staticmethod
-    def generate_string_session():
+    def generate_string_session(path):
         api_id = input(" [!] Please enter your API ID:\n")
         api_hash = input(" [!] Please enter your API Hash:\n")
         phone_number = input(" [!] Please enter your phone number:\n")
@@ -44,7 +45,22 @@ class TelegramHelper:
         else:
             _api_id = int(api_id)
         with TelegramClient(StringSession(), _api_id, api_hash) as client:
-            print(client.session.save())
+            saved = False
+            if path and path != "":
+                if Util.is_pathname_valid(path):
+                    sessionstring = client.session.save()
+                    with open(path, "w+") as f:
+                        f.write("API_ID=" + api_id + "\n")
+                        f.write("API_HASH=" + api_hash + "\n")
+                        f.write("PHONE_NUMBER=" + phone_number + "\n")
+                        f.write("SESSION_STRING=" + sessionstring + "\n")
+                    print(f" [!] Sessionstring saved to {path}")
+                    saved = True
+                else:
+                    print(" [-] Path is not valid.")
+                    return -1
+            if not saved:
+                print(client.session.save())
             return 0
 
     @staticmethod
@@ -134,7 +150,9 @@ class TelegramHelper:
             )
             self._client.connect()
             if not self._client.is_user_authorized():
-                print(f"[-] TELEGRAM ISN'T AUTHENTICATE PLS RECREATE A SESSIONSTRING...")
+                print(
+                    f"[-] TELEGRAM ISN'T AUTHENTICATE PLS RECREATE A SESSIONSTRING..."
+                )
                 exit(1)
         else:
             self._client = TelegramClient(
@@ -304,9 +322,7 @@ class TelegramHelper:
                     if not username:
                         username = "N/A"
                     if username != "N/A":
-                        telegram_details = self.check_telegram_nickname(
-                            "@" + username
-                        )
+                        telegram_details = self.check_telegram_nickname("@" + username)
                     try:
                         try:
                             self._client(
@@ -333,7 +349,7 @@ class TelegramHelper:
 
         except TypeError as e:
             print(
-                f"  |  TypeError: {e}. --> The error might have occured due to the inability to delete the {_number_to_check} from the contact list."
+                f"  |  TypeError: {e}. --> The error might have occurred due to the inability to delete the {_number_to_check} from the contact list."
             )
         except:
             raise

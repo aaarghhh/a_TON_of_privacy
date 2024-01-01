@@ -46,7 +46,7 @@ Welcome in the realm of....."""
 ░░         ░░   ░  ▒ ░     ░░    ░   ▒   ░       ▒ ▒ ░░          
             ░      ░        ░        ░  ░░ ░     ░ ░             
                            ░             ░       ░ ░             
-v 0.1.8 """
+v 0.1.9 """
         + Style.RESET_ALL
     )
 
@@ -538,8 +538,8 @@ class Ton_retriever:
                 self.pivot_ens()
 
     @staticmethod
-    def telegram_generate_session():
-        TelegramHelper.generate_string_session()
+    def telegram_generate_session(session_path=None):
+        TelegramHelper.generate_string_session(session_path)
 
 
 def run():
@@ -602,6 +602,11 @@ def run():
         required=False,
         help="[?] where to store profile pics ...",
     )
+    parser.add_argument(
+        "--sessionpath",
+        required=False,
+        help="[?] where to store or dump the sesssion string, this an optional parameter, it will printed in stdout without it ...",
+    )
     try:
         print_banner()
         args = parser.parse_args()
@@ -611,7 +616,10 @@ def run():
             exit(0)
 
         if args.login:
-            Ton_retriever.telegram_generate_session()
+            session_path = None
+            if args.sessionpath:
+                session_path = args.sessionpath
+            Ton_retriever.telegram_generate_session(session_path=session_path)
             exit(0)
         else:
             ton_ret = Ton_retriever(
