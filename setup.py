@@ -5,7 +5,7 @@ from setuptools import (
 
 setup(
     name="atop",
-    version="0.1.9",
+    version="0.1.10",
     author="Aaarghhh",
     author_email="giacomo@udontneed.it",
     packages=["atop", "atop.modules"],
@@ -18,7 +18,7 @@ setup(
     long_description=open("README.md").read(),
     long_description_content_type="text/markdown",
     install_requires=[
-        "beautifulsoup4==4.12.2",
+        "beautifulsoup4>=4.10.0",
         "certifi==2023.7.22",
         "charset-normalizer==3.2.0",
         "colorama==0.4.6",

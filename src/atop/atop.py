@@ -46,7 +46,7 @@ Welcome in the realm of....."""
 ░░         ░░   ░  ▒ ░     ░░    ░   ▒   ░       ▒ ▒ ░░          
             ░      ░        ░        ░  ░░ ░     ░ ░             
                            ░             ░       ░ ░             
-v 0.1.9 """
+v 0.1.10 """
         + Style.RESET_ALL
     )
 

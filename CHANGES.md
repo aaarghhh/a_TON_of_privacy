@@ -1,5 +1,8 @@
 # CHANGELOG
 
+## VER 0.1.10
+- Added compatibility for Maltego-ltc
+
 ## VER 0.1.8
 - Fix README.md
 
