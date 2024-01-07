@@ -36,14 +36,23 @@ class TelegramHelper:
         _api_id = 0
         if not phone_number.startswith("+"):
             phone_number = "+" + phone_number.replace(" ", "")
-            if not re.compile(r"^(\+)[0-9]{11,12}$").match(phone_number):
-                print(" [-] Phone number is valid.")
-                return -1
+        phone_number = phone_number.strip()
+
+        if not re.compile(r"^(\+)[0-9]{11,12}$").match(phone_number):
+            print(" [-] Phone number is not valid!!!")
+            return -1
+
         if not re.compile(r"^\d+$").match(api_id):
-            print(" [-] App id is valid.")
+            print(" [-] App id is not valid!!!")
             return -1
         else:
-            _api_id = int(api_id)
+            _api_id = int(api_id.strip())
+
+        api_hash = api_hash.strip()
+        if not re.compile(r"^[a-fA-F0-9]{32}$").match(api_hash):
+            print(" [-] App hash is not valid!!!")
+            return -1
+
         with TelegramClient(StringSession(), _api_id, api_hash) as client:
             saved = False
             if path and path != "":
