@@ -54,7 +54,7 @@ v 0.1.11 """
 class Ton_retriever:
     telegram_pivot = False
     silent = False
-    step = 10000
+    step = 1000
     offset = 0
     target = ""
     tor_proxy = False
@@ -467,7 +467,7 @@ class Ton_retriever:
 
     def request_info(self):
         count = 0
-        request_api = f"https://tonapi.io/v1/nft/searchItems?collection=0%3A{self.type}&include_on_sale=false&limit={self.step}&offset={self.offset}"
+        request_api = f"https://tonapi.io/v2/nfts/collections/0%3A{self.type}/items?limit={self.step}&offset={self.offset}"
         try:
             res = self.session.get(request_api).text
             obj = json.loads(res)
@@ -485,7 +485,9 @@ class Ton_retriever:
                     search_field = element["metadata"]["name"].replace(" ", "")
 
                     if self.kind == "NICKNAME":
-                        search_field = "@" + element["metadata"]["name"]
+                        if len(element["metadata"]["name"]) > 0:
+                            if search_field[0] != "@":
+                                 search_field = "@" + element["metadata"]["name"]
 
                 elif "dns" in element.keys():
                     if element["dns"]:
