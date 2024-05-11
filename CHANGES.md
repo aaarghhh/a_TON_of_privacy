@@ -1,4 +1,8 @@
 # CHANGELOG
+## VER 0.2.02
+- Improved the README.md
+- Improved the speed of the search
+- Added a proper analysis of the Owner of the NFT
 
 ## VER 0.1.11
 - Added compatibility some improvements for Maltego-ltc

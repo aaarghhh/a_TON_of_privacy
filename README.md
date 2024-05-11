@@ -1,4 +1,4 @@
-# A TON of privacy v0.1.11
+# A TON of privacy v0.2.02
 ## ATOP - A tool for investigating TON network and its NFT.
 
 "A TON of Privacy" formally called ATOP ... is a tool for conducting OSINT investigations on TON (Telegram 🙃) NFTs.  
@@ -17,21 +17,32 @@ ATOP supports:
 - TON PHONE NUMBERS (+888)
 
 ## INSTALLATION
+### 1. Git clone the repository.
+```
+$ git clone https://github.com/aaarghhh/a_TON_of_privacy.git
+$ cd a_TON_of_privacy
+```
 Install dependencies using pip and the file requirements.
 ```
 $ pip install -r requirements.txt
 ```
-Install via pip
+### 2. Via pipx
 ```
-$ pip install atop
+$ pipx install atop
 ```
 ## USAGE 
-If atop was installed as a **global package**: 
+
+
+If atop was installed as a **global package** (pipx): 
 ```
 $ a-ton-of-privacy --target "+888 12345678"
 ```
-Retrieve information about a:  
-  
+If atop was installed cloning the repository, from the root directory of the repository:
+```
+cd src/
+# python -m atop.atop --target @whatiamlookingfor
+```
+It retrieves information about a:
 - Telephone numbers
 ```
 $ python3 /src/atop/atop.py --target "+888 12345678"

@@ -1,6 +1,4 @@
-from colorama import Fore, Style
 import requests
-
 import re
 import json
 import argparse
@@ -9,47 +7,13 @@ import time
 from datetime import datetime
 from dotenv import load_dotenv
 from atop.modules.telegramhelper import TelegramHelper
-from atop.modules.const import user_agent
+from atop.modules.util import Util
 import os
 
 delays = [0.2, 0.5, 0.6, 0.5, 0.1, 0.4, 1]
 
-
 def gdelay():
     return random.choice(delays)
-
-
-def print_banner():
-    print(
-        """
-Welcome in the realm of....."""
-        + Fore.RED
-        + """
-
- ▄▄▄         ▄▄▄█████▓ ▒█████   ███▄    █     ▒█████    █████▒   
-▒████▄       ▓  ██▒ ▓▒▒██▒  ██▒ ██ ▀█   █    ▒██▒  ██▒▓██   ▒    
-▒██  ▀█▄     ▒ ▓██░ ▒░▒██░  ██▒▓██  ▀█ ██▒   ▒██░  ██▒▒████ ░    
-░██▄▄▄▄██    ░ ▓██▓ ░ ▒██   ██░▓██▒  ▐▌██▒   ▒██   ██░░▓█▒  ░    
- ▓█   ▓██▒     ▒██▒ ░ ░ ████▓▒░▒██░   ▓██░   ░ ████▓▒░░▒█░       
- ▒▒   ▓▒█░     ▒ ░░   ░ ▒░▒░▒░ ░ ▒░   ▒ ▒    ░ ▒░▒░▒░  ▒ ░       
-  ▒   ▒▒ ░       ░      ░ ▒ ▒░ ░ ░░   ░ ▒░     ░ ▒ ▒░  ░         
-  ░   ▒        ░      ░ ░ ░ ▒     ░   ░ ░    ░ ░ ░ ▒   ░ ░       
-      ░  ░                ░ ░           ░        ░ ░             
-                                                                 
- ██▓███   ██▀███   ██▓ ██▒   █▓ ▄▄▄       ▄████▄▓██   ██▓        
-▓██░  ██▒▓██ ▒ ██▒▓██▒▓██░   █▒▒████▄    ▒██▀ ▀█ ▒██  ██▒        
-▓██░ ██▓▒▓██ ░▄█ ▒▒██▒ ▓██  █▒░▒██  ▀█▄  ▒▓█    ▄ ▒██ ██░        
-▒██▄█▓▒ ▒▒██▀▀█▄  ░██░  ▒██ █░░░██▄▄▄▄██ ▒▓▓▄ ▄██▒░ ▐██▓░        
-▒██▒ ░  ░░██▓ ▒██▒░██░   ▒▀█░   ▓█   ▓██▒▒ ▓███▀ ░░ ██▒▓░        
-▒▓▒░ ░  ░░ ▒▓ ░▒▓░░▓     ░ ▐░   ▒▒   ▓▒█░░ ░▒ ▒  ░ ██▒▒▒         
-░▒ ░       ░▒ ░ ▒░ ▒ ░   ░ ░░    ▒   ▒▒ ░  ░  ▒  ▓██ ░▒░         
-░░         ░░   ░  ▒ ░     ░░    ░   ▒   ░       ▒ ▒ ░░          
-            ░      ░        ░        ░  ░░ ░     ░ ░             
-                           ░             ░       ░ ░             
-v 0.1.11 """
-        + Style.RESET_ALL
-    )
-
 
 class Ton_retriever:
     telegram_pivot = False
@@ -65,6 +29,10 @@ class Ton_retriever:
     nft_name = ""
     is_scam = ""
     owner_name = ""
+    owner_nicks = []
+    nft_address = ""
+    creation_date = ""
+    last_update = ""
     info = None
     transactions = None
     nfts = None
@@ -92,22 +60,6 @@ class Ton_retriever:
     def sleeping_time():
         time.sleep(gdelay())
 
-    @staticmethod
-    def ipf_ens(domain, session=None):
-        ipfs_url = ""
-        request_api = f"https://{domain}.limo"
-        try:
-            if not session:
-                res = requests.get(request_api, timeout=5)
-            else:
-                res = session.get(request_api, timeout=5)
-            if res.status_code == 200:
-                ipfs_url = res.headers["X-Ipfs-Path"]
-        except Exception as exx:
-            pass
-        time.sleep(0.3)
-        return ipfs_url
-
     def get_session(self):
         ## session stora i cookie
         self.session = requests.session()
@@ -116,8 +68,6 @@ class Ton_retriever:
                 "http": f"{self.s_proto}://{self.s_proxy}:{self.s_port}",
                 "https": f"{self.s_proto}://{self.s_proxy}:{self.s_port}",
             }
-            self.user_agent_retrieve(self)
-            self.session.headers = {"User-Agent": self.ua()}
 
     def __init__(
         self,
@@ -180,12 +130,6 @@ class Ton_retriever:
         if not self.silent:
             print(f"\n [!] START CRAWLING.... {self.kind}: {self.target} \n")
 
-    """
-        TON DNS 0:b774d95eb20543f186c06b371ab88ad704f7e256130caf96189368a7d0cb6ccf
-        TON NICKNAME 0:80d78a35f955a14b679faa887ff4cd5bfc0f43b4a4eea2a7e6927f3701b273c2
-        TON NUMBERS 0:0e41dc1dc3c9067ed24248580e12b3359818d83dee0304fabcf80845eafafdb2
-    """
-
     def check_format(self, _string):
         status = False
         if re.match(r"\+?888[0-9\s]{0,12}", _string.strip()):
@@ -213,26 +157,6 @@ class Ton_retriever:
             )
         return status
 
-    def user_agent_retrieve(self):
-        try:
-            for browser in ["chrome", "edge", "firefox", "safari", "opera"]:
-                with self.session.get(
-                    f"http://useragentstring.com/pages/useragentstring.php?name={browser}"
-                ) as response:
-                    tt = response.content.decode("utf-8")
-                    count = 10
-                    for ua in re.findall(r"<li><a[^>]*>([^<]*)<\/a><\/li>", tt):
-                        if ua not in self.user_agents:
-                            self.user_agents.append(ua)
-                        count -= 1
-                        if count == 0:
-                            break
-        except Exception as exx:
-            self.user_agents = user_agent
-
-    def ua(self):
-        return random.choice(self.user_agents)
-
     def print_info(self):
         if not self.address:
             print(f" [-] {self.kind} NOT FOUND, {self.offset} {self.kind} PROCESSED...")
@@ -240,30 +164,34 @@ class Ton_retriever:
         else:
             balance = "N/A"
             last_date = datetime.min
-            print(
-                """
-      ░▒████████████████████ TON ██████████████████████▒░                   
-                    """
-            )
-
-            header = f" [+] Details for {self.kind.lower()}: " + self.target
+            header = f" [+] Details for target: {self.kind.lower()}: " + self.target
             if self.asset_in_sale:
                 header = header + " ( asset in sale! )"
             print(header)
+            print("  ├  Address: ", str(self.nft_address))
             print("  ├  Owner address: ", str(self.address))
-            print("  ├  Is scam: ", str(self.is_scam))
+            print("  ├  Creation date: ", str(self.creation_date))
+            print("  ├  Last update: ", str(self.last_update))
+            print("  └  ------------------------------------\n")
+
             if self.owner_name != "":
-                print("  ├  Owner name: ", str(self.owner_name))
+                print(" [+] Owner name: ", str(self.owner_name))
 
             if self.info:
                 if "result" in self.info.keys():
                     balance = str(int(self.info["result"]["balance"]) / 1000000000)
 
+            if self.owner_nicks:
+                print(
+                    "  ├  Owner related nicknames: ", str.join(", ", self.owner_nicks)
+                )
+
             if self.transactions and len(self.transactions):
                 last_date = datetime.fromtimestamp(self.transactions[0]["utime"])
 
             print("  ├  Last activity: ", last_date.strftime("%Y-%m-%d %H:%M:%S"))
-            print("  ├  Balance: ", str(balance))
+            print("  ├  Own suspicious assets: ", str(self.is_scam))
+            print("  ├  Balance: ", str(balance), "TON")
             print("  └  ------------------------------------\n")
 
             processnft = False
@@ -276,6 +204,7 @@ class Ton_retriever:
                             % len(self.nfts["data"]["nftItemsByOwner"]["items"]),
                         )
                         processnft = True
+
             if processnft:
                 first = True
                 for nftff in self.nfts["data"]["nftItemsByOwner"]["items"]:
@@ -306,11 +235,6 @@ class Ton_retriever:
                 print("  └  ------------------------------------")
 
             if self.comprehensive and self.ens_detail:
-                print(
-                    """
-      ░▒████████████████████ ETH ██████████████████████▒░                   
-                    """
-                )
                 if "data" in self.ens_detail.keys():
                     if "domains" in self.ens_detail["data"].keys():
                         if len(self.ens_detail["data"]["domains"]) == 1:
@@ -359,9 +283,7 @@ class Ton_retriever:
                     )
                     if domain["resolver"]:
                         print("  |  Resolver: %s" % (domain["resolver"]["address"]))
-                    current_ipfs = Ton_retriever.ipf_ens(
-                        domain["name"], session=self.session
-                    )
+                    current_ipfs = Util.ipf_ens(domain["name"], session=self.session)
                     if current_ipfs != "":
                         print("  |  IPFS root: %s" % current_ipfs)
                     first = False
@@ -378,9 +300,9 @@ class Ton_retriever:
                         and self.telegram_pivot
                     ):
                         if self.tgchecker:
-                            currentnft[
-                                "tg-data"
-                            ] = self.tgchecker.check_telegram_number(currentnft["name"])
+                            currentnft["tg-data"] = (
+                                self.tgchecker.check_telegram_number(currentnft["name"])
+                            )
                     if (
                         currentnft["collection"]["name"].strip() == "Telegram Usernames"
                         and self.telegram_pivot
@@ -467,58 +389,90 @@ class Ton_retriever:
 
     def request_info(self):
         count = 0
-        request_api = f"https://tonapi.io/v2/nfts/collections/0%3A{self.type}/items?limit={self.step}&offset={self.offset}"
+
+        request_api = f"https://ton.diamonds/api/v1/explorer/search_list"
+        payload = {"search": self.target}
         try:
-            res = self.session.get(request_api).text
-            obj = json.loads(res)
-            if "message" in obj.keys():
-                if obj["message"] == "rate limit exceeded":
-                    print(
-                        f" [-] RATE LIMIT EXCEEDED... {self.offset} NUMBERS CHECKED.."
-                    )
-                    exit(1)
+            res = self.session.post(request_api, payload).text
+            objnft = json.loads(res)
+            if (
+                "data" in objnft.keys()
+                and "nfts" in objnft["data"].keys()
+                and len(objnft["data"]["nfts"]) > 0
+            ):
+                for nft in objnft["data"]["nfts"]:
+                    if nft["name"] == self.target.strip():
+                        nft_address_hex = Util.convert_ton_address(nft["nftAddress"])
+                        nft_owner_hex = Util.convert_ton_address(nft["owner"])
+                        created = nft["lastSale"]
+                        last_update = nft["createdAt"]
 
-            for element in obj["nft_items"]:
-                count += 1
-                search_field = ""
-                if "name" in element["metadata"].keys():
-                    search_field = element["metadata"]["name"].replace(" ", "")
+                        ## enriching the data
+                        request_api = f"https://tonapi.io/v2/accounts/0%3A{nft_owner_hex.split(':')[1]}/nfts"
+                        nfts_analysis = self.session.get(request_api).text
+                        obj = json.loads(nfts_analysis)
 
-                    if self.kind == "NICKNAME":
-                        if len(element["metadata"]["name"]) > 0:
-                            if search_field[0] != "@":
-                                 search_field = "@" + element["metadata"]["name"]
+                        for element in obj["nft_items"]:
+                            count += 1
+                            search_field = ""
+                            if "name" in element["metadata"].keys():
+                                search_field = element["metadata"]["name"].replace(
+                                    " ", ""
+                                )
 
-                elif "dns" in element.keys():
-                    if element["dns"]:
-                        search_field = element["dns"]
+                                if self.kind == "NICKNAME":
+                                    if len(element["metadata"]["name"]) > 0:
+                                        if search_field[0] != "@":
+                                            search_field = (
+                                                "@" + element["metadata"]["name"]
+                                            )
 
-                if search_field == self.target:
-                    self.nft_name = search_field
-                    _owner = element["owner"]["address"]
-                    _is_scam = element["owner"]["is_scam"]
+                            elif "dns" in element.keys():
+                                if element["dns"]:
+                                    search_field = element["dns"]
 
-                    # handling auction smartcontract
-                    if (
-                        "sale" in element.keys()
-                        and element["owner"]["address"]
-                        != element["sale"]["owner"]["address"]
-                    ):
-                        self.asset_in_sale = True
-                        _owner = element["sale"]["owner"]["address"]
-                        _is_scam = element["sale"]["owner"]["is_scam"]
-                        if "name" in element["sale"]["owner"]:
-                            self.owner_name = element["sale"]["owner"]["name"]
-                    elif "name" in element["owner"].keys():
-                        self.owner_name = element["owner"]["name"]
+                            if "collection" in element.keys():
+                                if element["collection"]["address"]:
+                                    type = Util.retrieve_nft_type(
+                                        element["collection"]["address"]
+                                    )
+                                    if type == "Getgems-nick":
+                                        self.owner_nicks.append(
+                                            element["metadata"]["name"]
+                                        )
 
-                    self.address = _owner
-                    self.is_scam = _is_scam
-                    self.request_address_info(_owner)
-                    self.request_address_transctions(_owner)
-                    self.request_address_nft(_owner)
-                    self.stop_cycle = True
-                    break
+                            if search_field == self.target:
+                                self.nft_name = search_field
+                                _owner = element["owner"]["address"]
+                                _is_scam = element["owner"]["is_scam"]
+
+                                if (
+                                    "sale" in element.keys()
+                                    and element["owner"]["address"]
+                                    != element["sale"]["owner"]["address"]
+                                ):
+                                    self.asset_in_sale = True
+                                    _owner = element["sale"]["owner"]["address"]
+                                    _is_scam = element["sale"]["owner"]["is_scam"]
+                                    if "name" in element["sale"]["owner"]:
+                                        self.owner_name = element["sale"]["owner"][
+                                            "name"
+                                        ]
+                                elif "name" in element["owner"].keys():
+                                    self.owner_name = element["owner"]["name"]
+
+                                self.nft_address = nft_address_hex
+                                self.creation_date = created.replace("T", " ").replace(
+                                    "Z", ""
+                                )
+                                self.last_update = last_update.replace(
+                                    "T", " "
+                                ).replace("Z", "")
+                                self.address = _owner
+                                self.is_scam = _is_scam
+                                self.request_address_info(_owner)
+                                self.request_address_transctions(_owner)
+                                self.request_address_nft(_owner)
 
         except Exception as exx:
             if not self.silent:
@@ -530,11 +484,7 @@ class Ton_retriever:
 
     def start_searching(self):
         self.offset = 0
-        current_finding = self.step
-        while not self.stop_cycle and current_finding == self.step:
-            current_finding = self.request_info()
-            self.offset += current_finding
-            time.sleep(gdelay())
+        self.request_info()
         if self.comprehensive:
             if self.kind == "DOMAIN":
                 self.pivot_ens()
@@ -610,7 +560,7 @@ def run():
         help="[?] where to store or dump the sesssion string, this an optional parameter, it will printed in stdout without it ...",
     )
     try:
-        print_banner()
+        Util.print_banner()
         args = parser.parse_args()
 
         if not args.target and not args.login:
