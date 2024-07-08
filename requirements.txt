@@ -1,11 +1,16 @@
 beautifulsoup4==4.12.2
+bitarray==2.6.0
 bs4==0.0.1
 build==1.0.3
 certifi==2023.11.17
+cffi==1.16.0
 charset-normalizer==3.3.2
 colorama==0.4.6
+crc16==0.1.1
+crc32c==2.4.1
 idna==3.6
 load-dotenv==0.1.0
+multidict==6.0.5
 numpy==1.26.3
 packaging==23.2
 pyaes==1.6.1
@@ -21,5 +26,8 @@ requests==2.31.0
 rsa==4.9
 soupsieve==2.5
 Telethon==1.33.1
+tonsdk==1.0.14
+tvm-valuetypes==0.0.12
+typing_extensions==4.12.2
 urllib3==2.1.0
 yarl==1.9.4
