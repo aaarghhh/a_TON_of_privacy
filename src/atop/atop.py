@@ -1,4 +1,7 @@
 import requests
+from requests.packages import urllib3
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
 import re
 import json
 import argparse
@@ -9,8 +12,11 @@ from dotenv import load_dotenv
 from atop.modules.telegramhelper import TelegramHelper
 from atop.modules.util import Util
 import os
+import base64
 
+service01 = "aHR0cHM6Ly8xNjcuMTcyLjE3OC40OS9hcGkvdjEvZXhwbG9yZXIvc2VhcmNoX2xpc3Q="
 delays = [0.2, 0.5, 0.6, 0.5, 0.1, 0.4, 1]
+
 
 def gdelay():
     return random.choice(delays)
@@ -52,9 +58,11 @@ class Ton_retriever:
     outputdir = None
 
     proxy = False
+
     s_proto = "socks5"
     s_proxy = "127.0.0.1"
     s_port = "9050"
+    s_proxy = {'http': "socks5://127.0.0.1:9050", 'https': "socks5://127.0.0.1:9050"}
 
     @staticmethod
     def sleeping_time():
@@ -82,6 +90,7 @@ class Ton_retriever:
         telegram_api_telephone=None,
         sessionstring=None,
     ):
+
         if _telegram_pivot:
             load_dotenv()
             try:
@@ -186,8 +195,8 @@ class Ton_retriever:
                     "  ├  Owner related nicknames: ", str.join(", ", self.owner_nicks)
                 )
 
-            if self.transactions and len(self.transactions):
-                last_date = datetime.fromtimestamp(self.transactions[0]["utime"])
+            if self.transactions and len(self.transactions["result"]):
+                last_date = datetime.fromtimestamp(self.transactions["result"][0]["utime"])
 
             print("  ├  Last activity: ", last_date.strftime("%Y-%m-%d %H:%M:%S"))
             print("  ├  Own suspicious assets: ", str(self.is_scam))
@@ -364,23 +373,33 @@ class Ton_retriever:
             exit(1)
 
     def request_address_info(self, addr):
-        c_addr = addr.split(":")[1]
+        headers = {
+            "Accept": "application/json",
+        }
         request_api = (
-            "https://api.ton.cat/v2/explorer/getWalletInformation?address=0%3A" + c_addr
+            f"https://toncenter.com/api/v2/getExtendedAddressInformation?address={addr}"
         )
         try:
-            res = self.session.get(request_api).text
+            if not self.proxy:
+                res = requests.get(request_api,headers=headers).content.decode("utf-8")
+            else:
+                res = requests.get(request_api, headers=headers, proxies=self.s_proxy).content.decode("utf-8")
             self.info = json.loads(res)
         except Exception as exx:
             if not self.silent:
                 print(" [-] AN ISSUE OCCURRED DURING RETRIEVING ADDRESS INFO...")
             exit(1)
 
-    def request_address_transctions(self, addr):
-        c_addr = addr.split(":")[1]
-        request_api = f"https://toncenter.com/api/index/getTransactionsByAddress?address=0%3A{c_addr}&limit=20&offset=0&include_msg_body=true"
+    def request_address_transactions(self, addr):
+        headers = {
+            "Accept": "application/json",
+        }
+        request_api = f"https://toncenter.com/api/v2/getTransactions?address={addr}"
         try:
-            res = self.session.get(request_api).text
+            if not self.proxy:
+                res = requests.get(request_api, headers=headers).content.decode("utf-8")
+            else:
+                res = requests.get(request_api, headers=headers, proxies=self.s_proxy).content.decode("utf-8")
             self.transactions = json.loads(res)
         except Exception as exx:
             if not self.silent:
@@ -390,10 +409,24 @@ class Ton_retriever:
     def request_info(self):
         count = 0
 
-        request_api = f"https://ton.diamonds/api/v1/explorer/search_list"
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36",
+            "Accept": "application/json",
+            "Accept-Language": "en-US,en;q=0.9",
+            "Accept-Encoding": "gzip, deflate, br, zstd",
+            "Connection": "keep-alive",
+            "Referer": "https://ton.diamonds/",
+            "Sec-Fetch-Dest": "empty",
+            "Sec-Fetch-Mode": "cors",
+            "Sec-Fetch-Site": "same-origin",
+            "Origin": "https://ton.diamonds"
+        }
+        self.session.headers.update(headers)
+        request_api = base64.b64decode(service01).decode("utf-8")
         payload = {"search": self.target}
         try:
-            res = self.session.post(request_api, payload).text
+
+            res = self.session.post(request_api, payload, verify=False).text
             objnft = json.loads(res)
             if (
                 "data" in objnft.keys()
@@ -402,8 +435,18 @@ class Ton_retriever:
             ):
                 for nft in objnft["data"]["nfts"]:
                     if nft["name"] == self.target.strip():
+                        nft_owner_hex = None
                         nft_address_hex = Util.convert_ton_address(nft["nftAddress"])
-                        nft_owner_hex = Util.convert_ton_address(nft["owner"])
+                        if nft["owner"]:
+                            nft_owner_hex = Util.convert_ton_address(nft["owner"])
+                        elif "auction" in nft["nftStatus"]:
+                            if nft["auction"] and nft["auction"]["nftOwnerAddress"]:
+                                nft_owner_hex = Util.convert_ton_address(nft["auction"]["nftOwnerAddress"])
+                        if not nft_owner_hex or nft_owner_hex == "":
+                            print(
+                                f" [-] THERE WAS SOME ISSUE DURING REQUESTING INFO ABOUT TON {self.kind} ..."
+                            )
+
                         created = nft["lastSale"]
                         last_update = nft["createdAt"]
 
@@ -445,7 +488,7 @@ class Ton_retriever:
                                 self.nft_name = search_field
                                 _owner = element["owner"]["address"]
                                 _is_scam = element["owner"]["is_scam"]
-
+                                _friendly_owner = Util.convert_ton_address_sdk_friendly(_owner)
                                 if (
                                     "sale" in element.keys()
                                     and element["owner"]["address"]
@@ -470,15 +513,11 @@ class Ton_retriever:
                                 ).replace("Z", "")
                                 self.address = _owner
                                 self.is_scam = _is_scam
-                                self.request_address_info(_owner)
-                                self.request_address_transctions(_owner)
+                                self.request_address_info(_friendly_owner)
+                                self.request_address_transactions(_friendly_owner)
                                 self.request_address_nft(_owner)
-
         except Exception as exx:
-            if not self.silent:
-                print(
-                    f" [-] THERE WAS SOME ISSUE DURING REQUESTING INFO ABOUT TON {self.kind} ..."
-                )
+            print(f" [-] THERE WAS AN ERROR DURING PROCESSING DATA, DETAILS: {exx}" )
             exit(1)
         return count
 
@@ -510,13 +549,6 @@ def run():
         help=" [?] Create session string for Telegram login ...",
         action="store_true",
     )
-    """
-    if a flag comprehensive is True
-    a deep inspection will be done:
-    -  domain -> pivoting on ENS domain
-    -  nickname -> Telepathy check nickname details
-    -  telephone -> TBA? 
-    """
     parser.add_argument(
         "-c",
         "--comprehensive",

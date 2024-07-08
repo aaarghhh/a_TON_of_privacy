@@ -3,10 +3,12 @@ import re
 import sys
 import errno
 import math
+import time
 import binascii
+import struct
+from tonsdk.utils import Address
 import base64
 import requests
-import time
 
 from colorama import Fore, Style
 
@@ -70,9 +72,20 @@ class Util:
 
     @staticmethod
     def convert_ton_address(address):
+        address = address.replace("-", "+").replace("_", "/")
         return (
             "0:" + (binascii.hexlify(base64.b64decode(address)).decode("utf-8")[4:68])
         )
+
+    @staticmethod
+    def convert_ton_address_sdk_bin(address):
+        address = Address(address)
+        return address.to_buffer()
+
+    @staticmethod
+    def convert_ton_address_sdk_friendly(address):
+        address = Address(address)
+        return address.to_string(is_user_friendly=True, is_url_safe=True)
 
     @staticmethod
     def retrieve_nft_type(address):
