@@ -131,7 +131,7 @@ class Ton_retriever:
         if not self.check_format(_telephone_num):
             if not self.silent:
                 print("\n [!] WRONG INPUT FORMAT")
-            return 1
+                exit(1)
         self.stop_cycle = False
         self.proxy = _tor
         self.silent = _silent
@@ -139,27 +139,41 @@ class Ton_retriever:
         if not self.silent:
             print(f"\n [!] START CRAWLING.... {self.kind}: {self.target} \n")
 
+    @staticmethod
+    def format_TON_number(number, spaces=True):
+        if spaces:
+            if number[0] != "+":
+                number = "+" + number
+            number = number[1:]
+            if len(number) == 7:
+                number = "+888" + " " + number[3:4] + " " + number[4:8]
+            else:
+                number = "+888" + " " + number[3:7] + " " + number[7:11]
+            return number
+        else:
+            if number[0] != "+":
+                number = "+" + number.replace(" ", "")
+            return number
+
     def check_format(self, _string):
         status = False
         if re.match(r"\+?888[0-9\s]{0,12}", _string.strip()):
             status = True
-            if _string[0] != "+":
-                _string = "+" + _string
-            self.target = _string.replace(" ", "")
+            self.target = self.format_TON_number(_string.strip(), spaces=True)
             self.kind = "NUMBER"
             self.type = (
                 "0e41dc1dc3c9067ed24248580e12b3359818d83dee0304fabcf80845eafafdb2"
             )
-        if re.match(r"[a-z0-9-_]+\.ton", _string.strip()):
+        elif re.match(r"[a-zA-Z0-9-_]+\.ton", _string.strip()):
             status = True
-            self.target = _string.strip()
+            self.target = _string.lower().strip()
             self.kind = "DOMAIN"
             self.type = (
                 "b774d95eb20543f186c06b371ab88ad704f7e256130caf96189368a7d0cb6ccf"
             )
-        if re.match(r"@[a-z0-9]", _string.strip()):
+        elif re.match(r"@[a-zA-Z0-9]", _string.strip()):
             status = True
-            self.target = _string.strip()
+            self.target = _string.lower().strip()
             self.kind = "NICKNAME"
             self.type = (
                 "80d78a35f955a14b679faa887ff4cd5bfc0f43b4a4eea2a7e6927f3701b273c2"
@@ -180,11 +194,15 @@ class Ton_retriever:
             print("  ├  Address: ", str(self.nft_address))
             print("  ├  Owner address: ", str(self.address))
             print("  ├  Creation date: ", str(self.creation_date))
-            print("  ├  Last update: ", str(self.last_update))
+            if not self.last_update:
+                self.last_update = "N/A"
+            print("  ├  Last sale: ", str(self.last_update))
             print("  └  ------------------------------------\n")
 
             if self.owner_name != "":
                 print(" [+] Owner name: ", str(self.owner_name))
+            else:
+                print(" [+] Owner name: N/A")
 
             if self.info:
                 if "result" in self.info.keys():
@@ -195,10 +213,12 @@ class Ton_retriever:
                     "  ├  Owner related nicknames: ", str.join(", ", self.owner_nicks)
                 )
 
-            if self.transactions and len(self.transactions["result"]):
+            if self.transactions["ok"] and self.transactions and len(self.transactions["result"]):
                 last_date = datetime.fromtimestamp(self.transactions["result"][0]["utime"])
+                print("  ├  Last activity: ", last_date.strftime("%Y-%m-%d %H:%M:%S"))
+            else:
+                print("  ├  Last activity:  [!] error retrieving last transactions, manual check needed ...")
 
-            print("  ├  Last activity: ", last_date.strftime("%Y-%m-%d %H:%M:%S"))
             print("  ├  Own suspicious assets: ", str(self.is_scam))
             print("  ├  Balance: ", str(balance), "TON")
             print("  └  ------------------------------------\n")
@@ -394,7 +414,7 @@ class Ton_retriever:
         headers = {
             "Accept": "application/json",
         }
-        request_api = f"https://toncenter.com/api/v2/getTransactions?address={addr}"
+        request_api = f"https://toncenter.com/api/v2/getTransactions?address={addr}&archival=true"
         try:
             if not self.proxy:
                 res = requests.get(request_api, headers=headers).content.decode("utf-8")
@@ -423,6 +443,8 @@ class Ton_retriever:
         }
         self.session.headers.update(headers)
         request_api = base64.b64decode(service01).decode("utf-8")
+
+
         payload = {"search": self.target}
         try:
 
@@ -447,8 +469,8 @@ class Ton_retriever:
                                 f" [-] THERE WAS SOME ISSUE DURING REQUESTING INFO ABOUT TON {self.kind} ..."
                             )
 
-                        created = nft["lastSale"]
-                        last_update = nft["createdAt"]
+                        last_sale = nft["lastSale"]
+                        created_at = nft["createdAt"]
 
                         ## enriching the data
                         request_api = f"https://tonapi.io/v2/accounts/0%3A{nft_owner_hex.split(':')[1]}/nfts"
@@ -469,6 +491,9 @@ class Ton_retriever:
                                             search_field = (
                                                 "@" + element["metadata"]["name"]
                                             )
+                                        self.owner_nicks.append(
+                                            element["metadata"]["name"]
+                                        )
 
                             elif "dns" in element.keys():
                                 if element["dns"]:
@@ -484,6 +509,8 @@ class Ton_retriever:
                                             element["metadata"]["name"]
                                         )
 
+                            if "+888" in search_field:
+                                search_field = self.format_TON_number(search_field)
                             if search_field == self.target:
                                 self.nft_name = search_field
                                 _owner = element["owner"]["address"]
@@ -505,12 +532,14 @@ class Ton_retriever:
                                     self.owner_name = element["owner"]["name"]
 
                                 self.nft_address = nft_address_hex
-                                self.creation_date = created.replace("T", " ").replace(
-                                    "Z", ""
-                                )
-                                self.last_update = last_update.replace(
-                                    "T", " "
-                                ).replace("Z", "")
+                                if last_sale:
+                                    self.last_update = last_sale.replace("T", " ").replace(
+                                        "Z", ""
+                                    )
+                                if created_at:
+                                    self.creation_date = created_at.replace(
+                                        "T", " "
+                                    ).replace("Z", "")
                                 self.address = _owner
                                 self.is_scam = _is_scam
                                 self.request_address_info(_friendly_owner)

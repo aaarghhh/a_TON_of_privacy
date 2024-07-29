@@ -1,4 +1,4 @@
-# A TON of privacy v0.2.02
+# A TON of privacy v0.2.24
 ## ATOP - A tool for investigating TON network and its NFT.
 
 "A TON of Privacy" formally called ATOP ... is a tool for conducting OSINT investigations on TON (Telegram 🙃) NFTs.  
@@ -79,7 +79,7 @@ Welcome in the realm of.....
 ░░         ░░   ░  ▒ ░     ░░    ░   ▒   ░       ▒ ▒ ░░          
             ░      ░        ░        ░  ░░ ░     ░ ░             
                            ░             ░       ░ ░             
-v 0.1.8
+v 0.2.25
 
  [!] START CRAWLING.... NUMBER: +888XXXXXXXXXXXX
 

@@ -1,4 +1,14 @@
 # CHANGELOG
+## VER 0.2.25
+- Transaction analysis fixed
+- Various improvements in the print and also exceptions handling
+
+## VER 0.2.24
+- Transaction analysis fixed 
+
+## VER 0.2.23
+- Various improvements and fixes
+
 ## VER 0.2.02
 - Improved the README.md
 - Improved the speed of the search
